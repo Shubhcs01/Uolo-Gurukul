@@ -1,0 +1,45 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+  }
+  
+  .modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    text-align: center;
+    border-radius: 20px;
+    width: 400px;
+    height: 224px;
+  }
+
+  .modal-success-icon {
+    width: 100px;
+    height: 100px;
+  }
+
+  .modal-content>h2{
+    font-family: "Outfit";
+    font-optical-sizing: auto;
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 27.72px;
+    letter-spacing: 0.15000000596046448px;
+  }
+
+  .modal-btn-close {
+    padding: 5px 15px 5px 15px;
+    border-radius: 8px;
+    border: 1px solid #561fe7;
+    color: #FFFFFF;
+    background-color: #6A39EA;
+    cursor: pointer;
+  }

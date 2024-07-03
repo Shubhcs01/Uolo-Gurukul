@@ -1,0 +1,53 @@
+.side-page {
+  width: 15%;
+  min-height: 100vh;
+  box-shadow: 3px 0px 4px 0px rgba(212, 210, 212, 1);
+  z-index: 1;
+}
+
+#team-member {
+  margin-top: 20px;
+  display: flex;
+}
+
+.team-logo {
+  width: 22px;
+  height: 16px;
+}
+
+svg {
+  margin-left: 15px;
+  margin-right: 7px;
+}
+
+.nav-div {
+  display: flex;
+  font-family: "Open Sans";
+  font-optical-sizing: auto;
+  font-weight: 600;
+  size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.25px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.createProfile-logo {
+  width: 24px;
+  height: 24px;
+  margin-right: 7px;
+  margin-left: 15px;
+}
+
+a {
+  text-decoration: none;
+}
+
+.active-nav-div {
+    background-color: #eee9fe;
+    color: #561ee7;
+}
+
+.inactive-nav-div {
+    color: #667085;
+}

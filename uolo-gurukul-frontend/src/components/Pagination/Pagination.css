@@ -1,0 +1,38 @@
+.pagination-section {
+  display: flex;
+  justify-content: center;
+}
+
+.pagination {
+   display: flex;
+  width: 180px;
+  height: 32px;
+  gap: 5px;
+  justify-content: center;
+}
+
+.btn-logo{
+   width: 19px;
+   height: 19px;
+}
+
+.btn{
+   cursor: pointer;
+   width: 32px;
+   height: 32px;
+   padding: 5px;
+   gap: 10px;
+   border-radius: 8px;
+   background: #FFFFFF;
+   border: 1px solid #E2E2E2;
+   font-family: "Open Sans";
+   font-optical-sizing: auto;
+   font-size: 13px;
+   font-weight: 600;
+   line-height: 17.7px;
+}
+
+.active{
+   background: #561FE7;
+   color: #FFFFFF;
+}

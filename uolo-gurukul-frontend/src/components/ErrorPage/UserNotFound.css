@@ -1,0 +1,22 @@
+.container{
+    display: flex;
+    flex-direction: column;
+    flex: auto;
+}
+
+.message-box{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: auto;
+    flex-direction: column;
+}
+
+img{
+    width: 200px;
+    height: 90px;
+}
+
+h1{
+    color: #3E2261;
+}
