@@ -58,8 +58,20 @@
   font-size: 25px;
   cursor: pointer;
   display: none;
-} 
-.kebab-menu>img{
+}
+.kebab-menu > img {
   width: 24px;
   height: 24px;
+}
+
+@media only screen and (max-device-width: 800px) {
+  .userCard {
+    width: 232px;
+    height: 322px;
+  }
+
+  .user-photo {
+    width: 232px;
+    height: 226px;
+  }
 }

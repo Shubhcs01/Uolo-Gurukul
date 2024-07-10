@@ -36,3 +36,9 @@
    background: #561FE7;
    color: #FFFFFF;
 }
+
+.btn:disabled, .btn[disabled]{
+  border: 1px solid #F6F6F6;
+  background-color: #F6F6F6;
+  color: #F6F6F6;
+}

@@ -3,9 +3,9 @@ import NoUserFound from '../../assets/noUserFound.png';
 
 const UserNotFound = () => {
   return (
-    <div className="container">
-      <div className="message-box">
-        <img src={NoUserFound} alt="userNotFound"/>
+    <div className="UserNotFoundContainer">
+      <div className="UserNotFoundMessageBox">
+        <img id="userNotFoundImg" src={NoUserFound} alt="userNotFound"/>
       </div>
     </div>
   );

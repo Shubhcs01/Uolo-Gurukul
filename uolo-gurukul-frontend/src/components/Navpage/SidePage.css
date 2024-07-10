@@ -3,6 +3,9 @@
   min-height: 100vh;
   box-shadow: 3px 0px 4px 0px rgba(212, 210, 212, 1);
   z-index: 1;
+  position: fixed;
+  top: 66px;
+  background-color: white;
 }
 
 #team-member {
@@ -44,10 +47,49 @@ a {
 }
 
 .active-nav-div {
-    background-color: #eee9fe;
-    color: #561ee7;
+  background-color: #eee9fe;
+  color: #561ee7;
 }
 
 .inactive-nav-div {
-    color: #667085;
+  color: #667085;
+}
+
+@media only screen and ((min-width: 800px)) and (max-device-width: 1025px) {
+  .side-page {
+    width: 25%;
+  }
+}
+
+@media only screen and (max-device-width: 800px) {
+  .side-page {
+    width: 32%;
+  }
+}
+
+@media only screen and (max-device-width: 600px) {
+  .mobile-side-page {
+    position: absolute;
+    background: white;
+    width: 85%;
+    min-height: 100vh;
+    box-shadow: 3px 0px 4px 0px rgba(212, 210, 212, 1);
+    z-index: 1;
+  }
+
+  .side-page {
+    display: none;
+  }
+
+  .mob-uolo-img-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 140px;
+  }
+
+  .mob-uolo-img {
+    width: 95.03px;
+    height: 32px;
+  }
 }

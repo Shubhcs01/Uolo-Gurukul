@@ -1,12 +1,11 @@
-.UserNotFoundContainer{
+.ServiceDownContainer{
     display: flex;
     flex-direction: column;
     flex: auto;
-    width: 85%;
-    height: 68.7vh;
+    height: 100vh;
 }
 
-.UserNotFoundMessageBox{
+.ServiceDownMessageBox{
     display: flex;
     justify-content: center;
     align-items: center;
@@ -14,11 +13,6 @@
     flex-direction: column;
 }
 
-#userNotFoundImg{
-    width: 200px;
-    height: 90px;
-}
-
-h1{
-    color: #3E2261;
+#serviceDownImg {
+    width: 50%;
 }
