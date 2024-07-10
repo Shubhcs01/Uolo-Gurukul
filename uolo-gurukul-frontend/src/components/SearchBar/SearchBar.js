@@ -1,25 +1,35 @@
-import { useState } from "react";
-import './SearchBar.css';
-import SearchIcon from '../../assets/searchIcon.png';
+import "./SearchBar.css";
+import SearchIcon from "../../assets/searchIcon.png";
+import { MdClear } from "react-icons/md";
 
-const SearchBar = () => {
-  // const [userName, setUsername] = useState(null);
-  const [input, setInput] = useState("");
-
+const SearchBar = ({ getSearchUser, searchInput, setSearchInput }) => {
   const handleClick = () => {
-    // setUsername(input);
-    setInput("");
+    getSearchUser(searchInput);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleClick();
+    }
+  };
+
+  const handleClear = () => {
+    setSearchInput("");
   };
 
   return (
     <div className="search-bar">
-      <img className="search-icon" src={SearchIcon} alt="searchIcon"/>
+      <img className="search-icon" src={SearchIcon} alt="searchIcon" />
       <input
         placeholder="Search by Name, or Email id"
         type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
+        value={searchInput}
+        onChange={(e) => setSearchInput(e.target.value)}
+        onKeyDown={handleKeyDown}
       />
+      {searchInput.length > 0 && (
+        <MdClear onClick={handleClear} id="searchClearBtn" size="30px" />
+      )}
       <button onClick={handleClick}>Search</button>
     </div>
   );
