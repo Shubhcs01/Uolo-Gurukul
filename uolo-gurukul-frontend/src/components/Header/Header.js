@@ -8,7 +8,7 @@ const Header = () => {
   const navigate = useNavigate()
 
   return (
-    <div className="header">
+    <div className="header sticky">
       <img className="uolo-logo" src={Logo} alt="uoloLogo" onClick={()=>navigate('/')} />
       <AvatarSection/>
     </div>
