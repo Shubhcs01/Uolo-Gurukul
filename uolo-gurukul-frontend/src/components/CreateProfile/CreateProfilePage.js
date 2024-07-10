@@ -1,11 +1,12 @@
-import "./CreateProfilePage.css";
+import Styles from "./CreateProfilePage.module.css";
 import { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import SuccessModal from "../Modal/SuccessModal";
 import DefaultImage from "../../assets/profilePic.png";
+import UploadImg from "../../assets/upload.png";
+import CryptoJS from 'crypto-js';
 
 const CreateProfilePage = () => {
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,9 +19,9 @@ const CreateProfilePage = () => {
   const [file, setFile] = useState(null);
   const [borderRadius, setBorderradius] = useState("0%");
   const navigate = useNavigate();
-  
-  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
+  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
+  const secretKey = "Uolo123@";
 
   useEffect(() => {
     if (name && password && confirmPassword && email && file) {
@@ -37,7 +38,7 @@ const CreateProfilePage = () => {
     setEmail("");
     setImageSrc(DefaultImage);
     setBorderradius("0%");
-    isButtonEnabled(false);
+    setIsButtonEnabled(false);
     setFile(null);
   };
 
@@ -47,7 +48,7 @@ const CreateProfilePage = () => {
     const hasDigit = /\d/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
     const minValiLength = password.length >= 8;
-    const maxValidLength = password.length <=15;
+    const maxValidLength = password.length <= 15;
 
     const validationMessages = [];
 
@@ -96,21 +97,19 @@ const CreateProfilePage = () => {
   };
 
   const handleSave = async () => {
-
     setIsButtonEnabled(false);
     setLoading(true);
 
-    if(!validateEmail(email)) {
+    if (!validateEmail(email)) {
       setIsButtonEnabled(true);
       setLoading(false);
-      setErrorMessage(["Wrong Email Format!"])
+      setErrorMessage(["Wrong Email Format!"]);
       setTimeout(() => {
         setErrorMessage([]);
       }, 5000);
       return;
     }
     //Todo: validate dp
-    // Todo: Hash password before saving
 
     if (!validatePassword(password)) {
       setTimeout(() => {
@@ -132,43 +131,41 @@ const CreateProfilePage = () => {
     console.log("POST API called");
     setErrorMessage([]);
 
+    const hashedPassword = CryptoJS.AES.encrypt(password, secretKey).toString();;
+
+
     const formData = new FormData();
-    formData.append('name', name);
-    formData.append('email', email);
-    formData.append('password', password);
+    formData.append("name", name);
+    formData.append("email", email);
+    formData.append("password", hashedPassword);
 
     if (file) {
-      formData.append('avatar', file);
+      formData.append("avatar", file);
     }
 
     try {
       const response = await fetch(`${BASE_URL}/v1/users`, {
-        method: 'POST',
-        body: formData
+        method: "POST",
+        body: formData,
       });
 
-      if (!response.ok) {
-        setIsButtonEnabled(true);
-        setLoading(false);
-        throw new Error('Network response was not ok');
-      }
-
       const data = await response.json();
+
       if (data.status !== 201) {
         setIsButtonEnabled(true);
         setLoading(false);
-        setErrorMessage([data.error]);
+        setErrorMessage([data.msg]);
         setTimeout(() => {
           setErrorMessage([]);
         }, 5000);
       } else {
-        console.log('Profile created successfully:', data.newUser);
+        console.log("Profile created successfully:", data.newUser);
         setIsButtonEnabled(true);
         setLoading(false);
         setIsModalOpen(true);
         setTimeout(() => {
           setIsModalOpen(false);
-          navigate('/');
+          navigate("/");
         }, 1000);
         setName("");
         setPassword("");
@@ -180,13 +177,15 @@ const CreateProfilePage = () => {
     } catch (error) {
       setIsButtonEnabled(true);
       setLoading(false);
-      console.error('Error creating profile:', error);
+      setErrorMessage(["Error 500: Something went wrong!!"]);
+      setTimeout(() => {
+        setErrorMessage([]);
+      }, 5000);
     }
   };
 
   const handleImageChange = (e) => {
     const file1 = e.target.files[0];
-    // console.log("file1: ",file1);
 
     setFile(file1);
     if (file1) {
@@ -203,24 +202,48 @@ const CreateProfilePage = () => {
     document.getElementById("fileInput").click();
   };
 
+  const handleNameInput = (e) => {
+    setErrorMessage([]);
+    const value = e.target.value;
+    const pattern = /^[A-Za-z\s]*$/;
+
+    if (!pattern.test(value)) {
+      setErrorMessage(["Please enter alphabets only."]);
+      setTimeout(() => {
+        setErrorMessage([]);
+      }, 5000);
+      return;
+    }
+
+    setName(value);
+  };
+
   return (
-    <div className="create-profile-container">
+    <div className={Styles.createProfileContainer + " " + Styles.sticky}>
       <h1>Create Profile</h1>
-      <div className="create-profile">
-        <div className="form">
+      <div className={Styles.createProfile}>
+        <div className={Styles.form}>
           {errorMessage.length !== 0 &&
-            errorMessage.map((msg) => <p className="form-error">*{msg}*</p>)}
-          <div className="upload-photo">
+            errorMessage.map((msg) => (
+              <p className={Styles.formError}>*{msg}*</p>
+            ))}
+          <div className={Styles.uploadPhoto}>
             <p>
               Upload Photo<span>*</span>
             </p>
             <p>Upload passport size photo</p>
             <img
-              id="profile-pic"
+              id={Styles.profilePic}
               src={imageSrc}
               alt="profilePhoto"
               onClick={handleImageClick}
               style={{ borderRadius: borderRadius }}
+            />
+            <img
+              className={Styles.uploadImg}
+              src={UploadImg}
+              alt="uploadPhoto"
+              onClick={handleImageClick}
             />
             <form>
               <input
@@ -240,7 +263,8 @@ const CreateProfilePage = () => {
             type="text"
             value={name}
             placeholder="Enter your full name"
-            onChange={(e) => setName(e.target.value)}
+            onChange={handleNameInput}
+            required
           />
           <label>
             Email-ID<span>*</span>
@@ -249,6 +273,7 @@ const CreateProfilePage = () => {
             value={email}
             placeholder="Enter your email"
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
           <label>
             Password<span>*</span>
@@ -258,6 +283,7 @@ const CreateProfilePage = () => {
             value={password}
             placeholder="Enter password"
             onChange={(e) => setPassword(e.target.value)}
+            required
           />
           <label>
             Confirm Password<span>*</span>
@@ -267,17 +293,20 @@ const CreateProfilePage = () => {
             value={confirmPassword}
             placeholder="Re-enter password"
             onChange={(e) => setConfirmPassword(e.target.value)}
+            required
           />
         </div>
       </div>
-      <div className="form-footer">
-        <button onClick={handleCancel} className="btn-cancel">
+      <div className={Styles.formFooter}>
+        <button onClick={handleCancel} className={Styles.btnCancel}>
           Cancel
         </button>
         <button
           type="button"
           onClick={handleSave}
-          className={`btn-save ${isButtonEnabled ? "enabled-btn" : ""}`}
+          className={`${Styles.btnSave} ${
+            isButtonEnabled && Styles.enabledBtn
+          }`}
           disabled={!isButtonEnabled}
         >
           Save
@@ -293,3 +322,5 @@ const CreateProfilePage = () => {
 };
 
 export default CreateProfilePage;
+
+
