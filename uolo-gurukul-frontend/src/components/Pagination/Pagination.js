@@ -2,11 +2,7 @@ import "./Pagination.css";
 import PrevBtn from "../../assets/previousBtn.png";
 import NextBtn from "../../assets/nextBtn.png";
 
-const Pagination = ({
-  totalPages,
-  handlePagination,
-  currentPageNumber,
-}) => {
+const Pagination = ({ totalPages, handlePagination, currentPageNumber }) => {
   const paginationNumbers = [];
 
   for (let i = 1; i <= totalPages; i++) {
@@ -16,31 +12,40 @@ const Pagination = ({
   return (
     <div className="pagination-section">
       <div className="pagination">
-        {currentPageNumber !== 1 && (
-          <button
-            className="btn"
-            onClick={() => handlePagination(currentPageNumber - 1, paginationNumbers.length)}
-          >
-            <img className="btn-logo" src={PrevBtn} />
-          </button>
-        )}
+        <button
+          className="btn"
+          onClick={() =>
+            handlePagination(currentPageNumber - 1, paginationNumbers.length)
+          }
+          disabled={currentPageNumber === 1}
+        >
+          <img className="btn-logo" src={PrevBtn} />
+        </button>
 
         {paginationNumbers.map((pageNumber) => (
-          <button className={"btn " + (pageNumber === currentPageNumber ? "active" : "inactive")}
-            onClick={() => handlePagination(pageNumber, paginationNumbers.length)}
+          <button
+            className={
+              "btn " +
+              (pageNumber === currentPageNumber ? "active" : "inactive")
+            }
+            onClick={() =>
+              handlePagination(pageNumber, paginationNumbers.length)
+            }
             key={pageNumber}
           >
             {pageNumber}
           </button>
         ))}
 
-        {currentPageNumber !== paginationNumbers.length && (
-          <button onClick={() => handlePagination(currentPageNumber + 1, paginationNumbers.length)}
-            className="btn"
-          >
-            <img className="btn-logo" src={NextBtn} />
-          </button>
-        )}
+        <button
+          onClick={() =>
+            handlePagination(currentPageNumber + 1, paginationNumbers.length)
+          }
+          className="btn"
+          disabled={currentPageNumber === paginationNumbers.length}
+        >
+          <img className="btn-logo" src={NextBtn} />
+        </button>
       </div>
     </div>
   );
