@@ -11,7 +11,7 @@ const UserCard = ({ user, handleDelete }) => {
       <div className="kebab-menu" onClick={() => setDialogOpen(!isDialogOpen)}>
         <img src={ThreeDot} />
       </div>
-      {isDialogOpen ? <KebabModal user={user} handleDelete={handleDelete} /> : <></>}
+      <KebabModal user={user} isDialogOpen={isDialogOpen} handleDelete={handleDelete} />
       <img className="user-photo" src={user.imageUrl} alt="profilePhoto" />
       <div className="user-details">
         <p>{user.name}</p>
