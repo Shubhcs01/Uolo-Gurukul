@@ -1,9 +1,11 @@
-.Admission-form{
-    margin: 0;
-    padding: 0;
-    display: flex;
+.Admission-form {
+  margin: 4rem 0 0 0;
+  padding: 0;
+  display: flex;
 }
 
-
-
-
+@media (max-width: 600px) {
+  .Admission-form {
+    margin: 0;
+  }
+}

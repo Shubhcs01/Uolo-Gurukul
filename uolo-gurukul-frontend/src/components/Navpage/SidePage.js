@@ -1,11 +1,21 @@
 import "./SidePage.css";
 import { NavLink, useLocation } from "react-router-dom";
+import UoloLogo from "../../assets/uoloLogo.png";
 
-const SidePage = () => {
+const SidePage = ({ showHamburger, setShowHamburger }) => {
   const location = useLocation();
 
   return (
-    <div className="side-page">
+    <div className={`${showHamburger ? "mobile-side-page" : "side-page"}`}>
+      
+      {showHamburger ? (
+        <div className="mob-uolo-img-container">
+          <img className="mob-uolo-img" src={UoloLogo} alt="uoloLogo" />
+        </div>
+      ) : (
+        <></>
+      )}
+
       <NavLink to="/">
         <div
           id="team-member"
@@ -50,7 +60,6 @@ const SidePage = () => {
               : "inactive-nav-div"
           }`}
         >
-          
           <svg
             width="24"
             height="24"
