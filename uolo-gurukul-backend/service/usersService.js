@@ -1,137 +1,99 @@
-require('dotenv').config();
-const {S3Client,GetObjectCommand,PutObjectCommand,} = require("@aws-sdk/client-s3");
+require("dotenv").config();
 const UserModel = require("../model/usersModel");
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const ElasticSearchService = require("./elasticService");
+const logger = require('../config/logger');
+const ImageService = require('./ImageService');
 
-const s3Client = new S3Client({
-  region: process.env.REGION,
-  credentials: {
-    accessKeyId: process.env.ACCESS_KEY,
-    secretAccessKey: process.env.SECRET_ACCESS_KEY,
-  },
-});
 
 const getUserFromDB = async (page, limit) => {
-  let paginatedUsers = await UserModel.find().skip((page - 1) * limit).limit(limit);
-  let totalItems = await UserModel.countDocuments();
+  let activeUsers = await UserModel.find({ isDeleted: false })
+    .skip((page - 1) * limit)
+    .limit(limit);
+  let deletedUsers = await UserModel.find({ isDeleted: true });
 
-  if (paginatedUsers.length === 0) {
-    console.log("users: empty");
-    return { data: [], meta: { totalPages: 0 } };
+  let inActiveItems = deletedUsers.length;
+  let totalItems = await UserModel.countDocuments();
+  let activeItems = totalItems - inActiveItems;
+
+  if (activeUsers.length === 0) {
+    logger.info('Empty Users');
+    return { status: 200, data: [], meta: { totalPages: 0 } };
   }
 
+  const updatedUsers = await ImageService.addImageUrl(activeUsers); // Add S3 image Url from key
+
   return {
-    data: paginatedUsers,
+    status: 200,
+    data: updatedUsers,
     meta: {
-      totalItems: totalItems,
+      totalItems: activeItems,
       currentPage: page,
-      totalPages: Math.ceil(totalItems / limit),
+      totalPages: Math.ceil(activeItems / limit),
     },
   };
 };
 
-const addImageUrl = async (users) => {
-  await Promise.all(users.map(async (user) => {
-    const url = await getObjectUrl(user.key);
-    user["imageUrl"] = url;
-  }));
-
-  return users;
-};
-
-const addUser = async (name, email, password, key) => {
-
+const addUser = async (name, email, password, file) => {
   if (!validateEmail(email)) {
-    return { status: 400, error: "Invalid email address" };
+    return { status: 400, msg: "!!Invalid email address!!" };
   }
 
-  if (isEmailExists(email)) {
-    console.log("Email already exists");
-    return { status: 400, error: "Email already exists" };
+  if (await isEmailExists(email)) {
+    logger.warn('🚀 Email already exists');
+    return { status: 400, msg: "Email already exists!!" };
   }
 
-  // Todo: vaidate password in backend
+  let uploadResult;
+  if (file) {
+    uploadResult = await uploadImage(file);
+    if (uploadResult.status !== 200) {
+      return { status: uploadResult.status, msg: uploadResult.msg };
+    }
+  }
 
   const newUser = {
-    name: name,
-    email: email,
-    password: password,
-    key, key
+    name,
+    email,
+    password,
+    key: uploadResult ? uploadResult.Key : undefined,
+    isDeleted: false,
   };
 
-  console.log("Saving into DB...", JSON.stringify(newUser));
-  let user = await UserModel.create(newUser);
-  console.log("Saved!! : " + user);
+  logger.info("🔄 Saving into DB...", JSON.stringify(newUser));
+  let userDoc = await UserModel.create(newUser);
+  logger.info("✅ Saved!! : ", userDoc);
+  const elasticPayLoad = {
+    name,
+    email,
+    key: uploadResult ? uploadResult.Key : undefined,
+    isDeleted: false,
+  };
+  ElasticSearchService.addDocument(process.env.ELASTIC_INDEX_NAME, userDoc._doc._id, elasticPayLoad);
   return { status: 201, newUser: newUser };
 };
 
-const getObjectUrl = async (key) => {
-
-  try {
-    const command = new GetObjectCommand({
-      Bucket: process.env.BUCKET_NAME,
-      Key: key,
-    });
-    const url = await getSignedUrl(s3Client, command,{expiresIn:3600});
-    return url;
-  } catch (err) {
-    console.error("Error in getting image:", err);
-    throw err;
-  }
-
-}
-
-const postObject = async (filename, contentType, buffer) => {
-
-  const imageName = `${Date.now()}_${filename}`;
-  const key = `shubham/uploads/team-uploads/${imageName}`;
-
-  try {
-    const command = new PutObjectCommand({
-      Bucket: process.env.BUCKET_NAME,
-      Key: key,
-      Body: buffer,
-      contentType: contentType,
-    });
-    const data = await s3Client.send(command);
-    if(data.$metadata.httpStatusCode === 200){
-      return {status:200, Key: key, msg: "Successfully Uploaded Image"};
-    } else {
-      return {status:400, msg: "Upload Failed!"};
-    }
-  } catch (err) {
-    console.error("Error uploading image:", err);
-    throw err;
-  }
-};
-
 const deleteUser = async (userId) => {
-  let user = await UserModel.findOneAndDelete({ _id: userId });
+  let user = await UserModel.findOneAndUpdate(
+    { _id: userId },
+    { isDeleted: true }
+  );
 
   if (!user) {
-    return { status: 400, message: `User with ID ${userId} not found.` };
+    return { status: 400, msg: `User with ID ${userId} not found.` };
   }
+
+  // update elastic index
+  const res = await ElasticSearchService.updateDocument(process.env.ELASTIC_INDEX_NAME, user._id, {isDeleted: true})
+  logger.info("🚀 ~ ElasticdeleteUser ~ res:", {res})
 
   return {
     status: 200,
-    message: `User with ID ${userId} deleted successfully.`,
+    msg: `User with ID ${userId} deleted successfully.`,
   };
 };
 
-const findUserByName = (userName) => {
-  const userIndex = users.findIndex((user) =>
-    user.name.toLowerCase().includes(userName.toLowerCase())
-  );
-
-  if (userIndex !== -1) {
-    return { status: 200, user: users[userIndex] };
-  } else {
-    return { status: 404, user: { error: "User not found" } };
-  }
-};
-
 const findUserByEmail = async (emailID) => {
-  let user = await UserModel.findOne({email: emailID})
+  let user = await UserModel.findOne({ email: emailID });
 
   if (!user) {
     return { status: 400, message: `User with email ${emailID} not found.` };
@@ -148,17 +110,40 @@ const validateEmail = (email) => {
   return emailRegex.test(email);
 };
 
-const isEmailExists = (email) => {
-  const result =  findUserByEmail(email);
+const isEmailExists = async (email) => {
+  const result = await findUserByEmail(email);
   return result.status === 200;
+};
+
+const uploadImage = async (file) => {
+  try {
+    const result = await ImageService.postObject(
+      file.originalname,
+      file.mimetype,
+      file.buffer
+    );
+
+    if (result.status === 200) {
+      return {
+        status: 200,
+        Key: result.Key,
+        msg: "Successfully Uploaded File.",
+      };
+    } else {
+      return { status: 400, msg: "Profile photo upload failed!" };
+    }
+  } catch (error) {
+    logger.error(`Error in Uploading File: `, error);
+    return {
+      status: 500,
+      msg: "Internal server error. Please try again later.",
+    };
+  }
 };
 
 module.exports = {
   addUser,
   deleteUser,
-  findUserByName,
-  postObject,
-  getObjectUrl,
-  addImageUrl,
-  getUserFromDB
+  findUserByEmail,
+  getUserFromDB,
 };

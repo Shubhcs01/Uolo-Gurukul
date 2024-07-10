@@ -8,14 +8,14 @@ const upload = multer({ storage: storage });
 
 const {
   getAllusers,
-  getSpecificUser,
   addUser,
   deleteUser,
+  searchUser
 } = require("../controllers/usersController");
 
 router.get("/", getAllusers);
 router.post("/",upload.single("avatar"), addUser);
+router.get("/search", searchUser);
 router.delete("/:id", deleteUser);
-router.get('/:name',getSpecificUser);
 
 module.exports = router;

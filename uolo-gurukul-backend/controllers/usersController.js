@@ -1,46 +1,28 @@
 const UserService = require("../service/usersService");
+const ElasticService = require("../service/elasticService");
+const { default: mongoose } = require("mongoose");
+const logger = require("../config/logger");
+const ObjectId = mongoose.Types.ObjectId;
 
 const getAllusers = async (req, res) => {
-  console.log("getAllusers called");
+  logger.info("🚀 getAllusers called");
   const page = Number(req.query.page || 1);
   const limit = Number(req.query.limit || 8);
 
   if (isNaN(page) || isNaN(limit) || page <= 0 || limit <= 0) {
     return res.status(400).json({
+      status: 400,
       error: "Invalid page or limit parameter. Both must be positive numbers.",
     });
   }
 
   try {
     const result = await UserService.getUserFromDB(page, limit);
-    const updatedUsers = await UserService.addImageUrl(result.data);
-    result.data = updatedUsers;
-    res.status(200).json(result);
+    res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error in getting all users:", error);
+    logger.error("500: Error in getting all users:", error);
     res.status(500).json({
-      error: "Internal server error. Please try again later.",
-    });
-  }
-};
-
-const getSpecificUser = async (req, res) => {
-  console.log("getSpecificUser");
-
-  const userName = req.params.name;
-
-  if (!userName || userName === "") {
-    return res
-      .status(400)
-      .json({ error: "Invalid User name. User name not provided" });
-  }
-
-  try {
-    const result = UserService.findUserByName(userName);
-    res.status(result.status).json(result.user);
-  } catch (error) {
-    console.error(`Error in getting user with name ${userName}:`, error);
-    res.status(500).json({
+      status: 500,
       error: "Internal server error. Please try again later.",
     });
   }
@@ -49,43 +31,43 @@ const getSpecificUser = async (req, res) => {
 const addUser = async (req, res) => {
   const { name, email, password } = req.body;
   const file = req.file;
+  const trimmedName = name.trim();
 
-  if (!email || !name || !password) {
-    console.log("Please check email/name/pasword");
-    return res.status(400).json({ error: "Please check email/name/pasword" });
+  if (!email) {
+    logger.warn("Email ID required. Please check!");
+    return res.status(400).json({ msg: "Email ID required. Please check!" });
+  }
+
+  if (!trimmedName) {
+    logger.warn("Name must not be empty.");
+    return res.status(400).json({ msg: "Name must not be empty." });
+  }
+
+  if (!password) {
+    logger.warn("Password must not be empty.");
+    return res.status(400).json({ msg: "Password must not be empty." });
   }
 
   if (!file) {
-    throw new Error("No file provided for upload");
+    logger.error("No file provided for upload");
+    return res
+      .status(400)
+      .json({ status: 400, msg: "Profile photo Required!" });
   }
 
-  // console.log("body: ",req.body)
-  // console.log("file: ",req.file)
-
   try {
-    const uploadResult = await UserService.postObject(
-      file.originalname,
-      file.mimetype,
-      file.buffer
+    const result = await UserService.addUser(
+      trimmedName,
+      email,
+      password,
+      file
     );
-    if (uploadResult.status === 200) {
-      const result = await UserService.addUser(
-        name,
-        email,
-        password,
-        uploadResult.Key
-      );
-      if (result.status == 400) {
-        return res.status(400).json(result);
-      }
-      return res.status(200).json(result);
-    } else {
-      return res.status(400).json({ msg: "Upload Failed!" });
-    }
+    return res.status(result.status).json(result);
   } catch (error) {
-    console.error(`Error in adding user`, error);
+    logger.error(`Error in adding user: `, error);
     res.status(500).json({
-      error: "Internal server error. Please try again later.",
+      status: 500,
+      msg: `Error in adding user: ${error.message}`,
     });
   }
 };
@@ -96,53 +78,61 @@ const deleteUser = async (req, res) => {
   if (!userId || userId === "") {
     return res
       .status(400)
-      .json({ error: "Invalid parameter. User ID not provided" });
+      .json({ status: 400, error: "Invalid parameter. User ID not provided" });
+  }
+
+  if (!ObjectId.isValid(userId)) {
+    return res
+      .status(400)
+      .json({ status: 400, error: `User ID ${userId} not found` });
   }
 
   try {
     const result = await UserService.deleteUser(userId);
-    res.status(result.status).json(result.message);
+    res.status(result.status).json(result.msg);
   } catch (error) {
-    console.error(`Error in deleting user with ID ${userId}:`, error);
+    logger.error(`Error in deleting user with ID ${userId}:`, error);
     res.status(500).json({
+      status: 500,
       error: "Internal server error. Please try again later.",
     });
   }
 };
 
-const uploadImage = async (req, res) => {
-  const file = req.file;
+const searchUser = async (req, res) => {
+  logger.info("🚀 searchUser controller called!")
+  let query = (req.query.query || '*');
+  query = query.trim();
+  const page = Number(req.query.page || 1);
+  const limit = Number(req.query.limit || 8); 
 
-  if (!file) {
-    throw new Error("No file provided for upload");
+  if (!query) {
+    return res
+      .status(400)
+      .json({ error: "Invalid User query. User query not provided" });
+  }
+
+  if (isNaN(page) || isNaN(limit) || page <= 0 || limit <= 0) {
+    return res.status(400).json({
+      status: 400,
+      error: "Invalid page or limit parameter. Both must be positive numbers.",
+    });
   }
 
   try {
-    const result = await UserService.postObject(
-      file.originalname,
-      file.mimetype,
-      file.buffer
-    );
-
-    if (result.status === 200) {
-      return res
-        .status(200)
-        .json({ Key: result.Key, msg: "Successfully Uploaded File." });
-    } else {
-      return res.status(400).json({ msg: "Upload Failed!" });
-    }
+    const result = await ElasticService.searchUsers(process.env.ELASTIC_INDEX_NAME, query, page, limit);
+    logger.info(`🚀 Search Results: `, {result})
+    res.status(result.status).json(result);
   } catch (error) {
-    console.error(`Error in Uploading File: `, error);
-    res.status(500).json({
-      error: "Internal server error. Please try again later.",
-    });
+    logger.error(`Error in searching`, error);
+    res.status(500).json({error: error});
   }
-};
+
+}
 
 module.exports = {
   getAllusers,
   addUser,
   deleteUser,
-  getSpecificUser,
-  uploadImage,
+  searchUser,
 };
