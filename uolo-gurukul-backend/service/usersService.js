@@ -1,37 +1,9 @@
 require("dotenv").config();
 const UserModel = require("../model/usersModel");
 const ElasticSearchService = require("./elasticService");
-const logger = require('../config/logger');
-const ImageService = require('./ImageService');
+const logger = require("../config/logger");
+const ImageService = require("./ImageService");
 
-
-const getUserFromDB = async (page, limit) => {
-  let activeUsers = await UserModel.find({ isDeleted: false })
-    .skip((page - 1) * limit)
-    .limit(limit);
-  let deletedUsers = await UserModel.find({ isDeleted: true });
-
-  let inActiveItems = deletedUsers.length;
-  let totalItems = await UserModel.countDocuments();
-  let activeItems = totalItems - inActiveItems;
-
-  if (activeUsers.length === 0) {
-    logger.info('Empty Users');
-    return { status: 200, data: [], meta: { totalPages: 0 } };
-  }
-
-  const updatedUsers = await ImageService.addImageUrl(activeUsers); // Add S3 image Url from key
-
-  return {
-    status: 200,
-    data: updatedUsers,
-    meta: {
-      totalItems: activeItems,
-      currentPage: page,
-      totalPages: Math.ceil(activeItems / limit),
-    },
-  };
-};
 
 const addUser = async (name, email, password, file) => {
   if (!validateEmail(email)) {
@@ -39,7 +11,7 @@ const addUser = async (name, email, password, file) => {
   }
 
   if (await isEmailExists(email)) {
-    logger.warn('🚀 Email already exists');
+    logger.warn("🚀 Email already exists");
     return { status: 400, msg: "Email already exists!!" };
   }
 
@@ -51,57 +23,125 @@ const addUser = async (name, email, password, file) => {
     }
   }
 
-  const newUser = {
-    name,
-    email,
-    password,
-    key: uploadResult ? uploadResult.Key : undefined,
-    isDeleted: false,
-  };
+  const session = await UserModel.startSession();
+  session.startTransaction();
 
-  logger.info("🔄 Saving into DB...", JSON.stringify(newUser));
-  let userDoc = await UserModel.create(newUser);
-  logger.info("✅ Saved!! : ", userDoc);
-  const elasticPayLoad = {
-    name,
-    email,
-    key: uploadResult ? uploadResult.Key : undefined,
-    isDeleted: false,
-  };
-  ElasticSearchService.addDocument(process.env.ELASTIC_INDEX_NAME, userDoc._doc._id, elasticPayLoad);
-  return { status: 201, newUser: newUser };
+  try{
+
+    // Adding into MongoDB
+    const newUser = {
+      name,
+      email,
+      password,
+      key: uploadResult ? uploadResult.Key : undefined,
+      isDeleted: false,
+    };
+    logger.info("🔄 Saving into DB...", JSON.stringify(newUser));
+    let userDoc = await UserModel.create(newUser);
+    logger.info("✅ Saved!! : ", userDoc);
+
+    // Adding into Elastic Index
+    const elasticPayLoad = {
+      name,
+      email,
+      key: uploadResult ? uploadResult.Key : undefined,
+      isDeleted: false,
+    };
+    const elasticResponse  = await ElasticSearchService.addDocument(
+      process.env.ELASTIC_INDEX_NAME,
+      userDoc._doc._id,
+      elasticPayLoad
+    );
+
+    if (elasticResponse.status !== 201) {
+      console.error("Error while adding user in elastic index!");
+      throw new Error("Error while adding user in elastic index!");
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return { status: 201, newUser: newUser };
+
+  } catch (error) {
+    // Rollback
+    await session.abortTransaction();
+    await session.endSession();
+    logger.error("❌ Error adding user: ", error);
+    logger.info("Rollback happend!")
+    return { status: 500, msg: `An error occurred while adding user: ${error.message}` };
+  }
 };
 
 const deleteUser = async (userId) => {
-  let user = await UserModel.findOneAndUpdate(
-    { _id: userId },
-    { isDeleted: true }
-  );
+  const session = await UserModel.startSession();
+  session.startTransaction();
 
-  if (!user) {
-    return { status: 400, msg: `User with ID ${userId} not found.` };
+  try {
+
+     // Updating mongoDB
+     let user = await UserModel.findOneAndUpdate(
+      { _id: userId },
+      { isDeleted: true },
+      { session }
+    );
+
+    if (!user) {
+      // Rollback
+      console.error("Something went wrong while updating MongoDB! Rollback occured!")
+      logger.error("Something went wrong while updating MongoDB! Rollback occured!")
+      await session.abortTransaction();
+      await session.endSession();
+      return { status: 404, msg: `User with ID ${userId} not found.` };
+    }
+
+    // update elastic index
+    const res = await ElasticSearchService.updateDocument(
+      process.env.ELASTIC_INDEX_NAME,
+      user._id,
+      { isDeleted: true }
+    );
+
+    if(res.status !== 200){
+      console.error("Something went wrong while updating Index.")
+      logger.error("Something went wrong while updating Index.")
+      throw new Error("Something went wrong while updating Index.")
+    }
+
+    console.log(`User with ID ${userId} deleted successfully`);
+    logger.info(`User with ID ${userId} deleted successfully`);
+
+    return {
+      status: 200,
+      msg: `User with ID ${userId} deleted successfully`,
+    };
+
+  } catch (error) {
+    // Rollback
+    await session.abortTransaction();
+    await session.endSession();
+    logger.error("Error deleting user: ", error);
+    logger.info("Rollback happend!");
+
+    return {
+      status: 500,
+      msg: `An error occurred: ${error.message}`,
+    };
   }
-
-  // update elastic index
-  const res = await ElasticSearchService.updateDocument(process.env.ELASTIC_INDEX_NAME, user._id, {isDeleted: true})
-  logger.info("🚀 ~ ElasticdeleteUser ~ res:", {res})
-
-  return {
-    status: 200,
-    msg: `User with ID ${userId} deleted successfully.`,
-  };
 };
 
 const findUserByEmail = async (emailID) => {
-  let user = await UserModel.findOne({ email: emailID });
+  const user = await UserModel.findOne({ email: emailID });
 
   if (!user) {
     return { status: 400, message: `User with email ${emailID} not found.` };
   }
 
+  const usersArray = await ImageService.addImageUrl([user]);
+
   return {
     status: 200,
-    user: user,
+    user: usersArray[0],
   };
 };
 
@@ -145,5 +185,4 @@ module.exports = {
   addUser,
   deleteUser,
   findUserByEmail,
-  getUserFromDB,
 };
