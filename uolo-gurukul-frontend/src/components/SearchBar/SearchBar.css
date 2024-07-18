@@ -4,9 +4,9 @@
   align-items: center;
   border: 1px solid #d0d5dd;
   border-radius: 13px 13px 13px 13px;
-  margin-left: 50px;
-  margin-right: 50px;
-  width: 86%;
+  width: 100%;
+  margin-left: 25px;
+  margin-right: 25px;
 }
 
 .search-icon {
@@ -16,7 +16,7 @@
   margin-left: 5px;
 }
 
-.search-bar > input {
+.search-bar input {
   border: none;
   width: 100%;
   font-family: "Open Sans";
@@ -26,6 +26,7 @@
   text-align: left;
   color: #101828;
   font-weight: 600;
+  outline: none;
 }
 
 .search-bar > button {
@@ -48,4 +49,16 @@
 #searchClearBtn {
   color: #98a2b3;
   cursor: pointer;
+}
+
+@media only screen and (max-device-width: 800px) {
+  .search-bar{
+    margin: 0;
+  }
+}
+
+@media only screen and (max-device-width: 400px) {
+  .search-bar input {
+    font-size: 11px;
+  }
 }

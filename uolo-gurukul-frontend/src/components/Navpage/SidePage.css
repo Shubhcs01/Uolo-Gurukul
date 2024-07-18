@@ -55,26 +55,55 @@ a {
   color: #667085;
 }
 
+.sidePageLogout_Btn {
+  position: absolute;
+  bottom: 0;
+  left: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 90%;
+}
+
+#sidePagelogout_Img {
+  width: 24px;
+  height: 24px;
+}
+
+#sidePagelogout_text {
+  font-family: "Open Sans";
+  font-optical-sizing: auto;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: 0.25px;
+  color: #667085;
+}
+
+/* Media Queries*/
+
 @media only screen and ((min-width: 800px)) and (max-device-width: 1025px) {
   .side-page {
     width: 25%;
   }
 }
 
-@media only screen and (max-device-width: 800px) {
+/* @media only screen and (max-device-width: 800px) {
   .side-page {
     width: 32%;
   }
-}
+} */
 
-@media only screen and (max-device-width: 600px) {
+@media only screen and (max-device-width: 800px) {
   .mobile-side-page {
-    position: absolute;
     background: white;
-    width: 85%;
+    width: 75%;
     min-height: 100vh;
-    box-shadow: 3px 0px 4px 0px rgba(212, 210, 212, 1);
     z-index: 1;
+
+    top: 0;
+    left: 0;
+    position: fixed;
   }
 
   .side-page {

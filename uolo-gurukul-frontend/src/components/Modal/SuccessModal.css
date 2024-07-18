@@ -43,3 +43,9 @@
     background-color: #6A39EA;
     cursor: pointer;
   }
+
+  @media screen and (max-device-width: 800px) {
+    .modal-content{
+      width: fit-content;
+    }
+  }

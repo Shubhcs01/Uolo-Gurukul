@@ -1,19 +1,31 @@
-.avatar-section{
-    box-sizing: border-box;
-    padding: 6px;
-    display: flex;
-    align-items: center;
+.avatar-section {
+  box-sizing: border-box;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
 }
-.avatar{
-    width: 40px;
-    height: 40px;
-}
-
-.drop-icon{
-    width: 18px;
-    height: 18px;
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 100%;
 }
 
-.avatar-name{
-    margin-left: 8px;
+.drop-icon {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.avatar-name {
+  margin-left: 8px;
+  margin-right: 7px;
+  font-family: "Open Sans";
+  font-optical-sizing: auto;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: 0.10000000149011612px;
+  text-align: left;
+  color: #344054;
 }

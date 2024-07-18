@@ -1,9 +1,6 @@
 .userCard {
   width: 276px;
-  height: 366px;
-  padding: 0px 0px 24px 0px;
-  gap: 16px;
-  border-radius: 16px;
+  border-radius: 20px;
   background: #f6f6f6;
   border: 1px solid #e2e2e2;
   display: flex;
@@ -22,23 +19,28 @@
 
 .user-photo {
   width: 276px;
-  height: 270px;
   border-radius: 16px 16px 0px 0px;
+  aspect-ratio: 1/1;
 }
 
 .user-details {
+  display: flex;
+  flex-direction: column;
   color: #101828;
   text-align: center;
-  /* padding-top: 15px; */
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+  margin: 8px 0;
 }
 
 .user-details p:first-child {
   font-family: Outfit;
   font-size: 22px;
   font-weight: 700;
-  line-height: 27.72px;
   letter-spacing: 0.15000000596046448px;
   margin: 0;
+  overflow-wrap: "anywhere";
 }
 
 .user-details :nth-child(2) {
@@ -46,9 +48,9 @@
   font-optical-sizing: auto;
   font-size: 22px;
   font-weight: 400;
-  line-height: 27.72px;
   letter-spacing: 0.15000000596046448px;
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .kebab-menu {
@@ -64,14 +66,25 @@
   height: 24px;
 }
 
-@media only screen and (max-device-width: 800px) {
+@media only screen and (min-width: 300px) and (max-device-width: 800px) {
   .userCard {
-    width: 232px;
-    height: 322px;
+    width: 47%;
   }
 
   .user-photo {
-    width: 232px;
-    height: 226px;
+    width: 100%;
   }
 }
+
+@media only screen and ((min-width: 300px)) and (max-device-width: 420px) {
+
+  .user-details p:first-child {
+    font-size: 16px;
+  }
+
+  .user-details :nth-child(2) {
+    font-size: 16px;
+  }
+
+}
+
