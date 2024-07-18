@@ -1,13 +1,50 @@
 import "./SidePage.css";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import UoloLogo from "../../assets/uoloLogo.png";
+import LogoutIcon from "../../assets/logoutIcon.png";
+import SuccessModal from "../Modal/SuccessModal";
 
 const SidePage = ({ showHamburger, setShowHamburger }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+  const handleLogout = async () => {
+    console.log("Pressed logout!");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${BASE_URL}/v1/auth/logout`, {
+        method: "POST",
+        credentials: "include", // Include credentials (cookies)
+      });
+
+      const data = await response.json();
+
+      if (data.status !== 200) {
+        console.error(`Status ${data.status} Error : ${data.msg}`);
+        setIsLoading(false);
+        return;
+      }
+
+      console.log("Logout Successful: ", data);
+      setIsLoading(false);
+      setIsModalOpen(true);
+      setTimeout(() => {
+        setIsModalOpen(false);
+        navigate("/login"); // redirect
+      }, 1000);
+    } catch (err) {
+      isLoading(false);
+      console.error("🚀 Error in Logout!");
+    }
+  };
 
   return (
     <div className={`${showHamburger ? "mobile-side-page" : "side-page"}`}>
-      
       {showHamburger ? (
         <div className="mob-uolo-img-container">
           <img className="mob-uolo-img" src={UoloLogo} alt="uoloLogo" />
@@ -18,6 +55,7 @@ const SidePage = ({ showHamburger, setShowHamburger }) => {
 
       <NavLink to="/">
         <div
+          onClick={() => setShowHamburger(false)}
           id="team-member"
           className={`nav-div ${
             location.pathname === "/" ? "active-nav-div" : "inactive-nav-div"
@@ -53,6 +91,7 @@ const SidePage = ({ showHamburger, setShowHamburger }) => {
 
       <NavLink to="/create">
         <div
+          onClick={() => setShowHamburger(false)}
           id="create-profile"
           className={`nav-div ${
             location.pathname === "/create"
@@ -88,6 +127,13 @@ const SidePage = ({ showHamburger, setShowHamburger }) => {
           <p> Create Profile </p>
         </div>
       </NavLink>
+
+      <div className="sidePageLogout_Btn" onClick={handleLogout}>
+        <img id="sidePagelogout_Img" src={LogoutIcon} alt="logoutImg" />
+        <p id="sidePagelogout_text"> Logout</p>
+      </div>
+
+      <SuccessModal isOpen={isModalOpen} isLoading={isLoading} message={"Logged out Successfully!"} />
     </div>
   );
 };

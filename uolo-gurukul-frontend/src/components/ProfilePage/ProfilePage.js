@@ -1,15 +1,19 @@
 import UserList from "./UserList";
 import "./ProfilePage.css";
 import { useState, useEffect } from "react";
-import SearchBar from "../SearchBar/SearchBar";
 import Pagination from "../Pagination/Pagination";
 import Error from "../ErrorPage/Error";
 import UserNotFound from "../ErrorPage/UserNotFound";
 import Loader from "../Loader/Loader";
 import SuccessModal from "../Modal/SuccessModal";
+import SearchBar from "../SearchBar/SearchBar";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../Auth/authContext";
+import toast from "react-hot-toast";
 
 const MainPage = () => {
   const [users, setUsers] = useState([]);
+  const { setIsAuthenticated, setCurrentUser } = useAuth()
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isloading, setLoading] = useState(true);
@@ -21,8 +25,8 @@ const MainPage = () => {
 
   useEffect(() => {
     console.log("feting details...");
-    if (!searchInput) getAllUsers(currentPageNumber);
-    else getSearchUser(searchInput);
+    if (searchInput) getUsers(searchInput, currentPageNumber);
+    else getUsers("*", currentPageNumber);
   }, [currentPageNumber]);
 
   const handlePagination = (pageNumber, paginationLength) => {
@@ -31,100 +35,58 @@ const MainPage = () => {
     }
   };
 
-  const getAllUsers = (currentPageNumber) => {
-    return fetch(`${BASE_URL}/v1/users?page=${currentPageNumber}`)
+  const getUsers = (query = "*", currPageNum = currentPageNumber) => {
+
+    setLoading(true);
+    return fetch(`${BASE_URL}/v1/users?query=${query}&page=${currPageNum}`, {
+      method: "GET",
+      credentials: "include",
+    })
       .then((response) => {
         return response.json();
       })
       .then((data) => {
-        console.log("🚀 ~ .then ~ data:", data);
-
+        console.log("🚀 Fetched Users: ", data);
         if (data.status !== 200) {
-          setError(data.error);
-          return <Error message={data.error} />;
+          if (data.status === 401) {
+            console.log("Token invalid/expired!");
+            toast.error("Session expired! Please login again.");
+            setLoading(false);
+            setIsAuthenticated(false);
+            setCurrentUser(false);
+            <Navigate to={"/login"} />;
+          } else {
+            console.log("fgh")
+            throw new Error("token invalid/expired");
+          }
         }
 
-        if (data.data.length !== 0) {
-          console.log("Users Data: ", data.data);
+        if (data.data.length === 0) {
+          console.log("No user found with given search query!");
           setUsers(data.data);
-          setTotalPages(data.meta.totalPages);
+          setTotalPages(0);
           setLoading(false);
+          //Empty Users at current page
+          if (currentPageNumber !== 1) {
+            setCurrentPageNumber(currentPageNumber - 1);
+          }
           return;
         }
 
-        //Empty Users at current page
-        if (currentPageNumber !== 1) {
-          setCurrentPageNumber(currentPageNumber - 1);
-        }
+        setUsers(data.data);
+        setTotalPages(data.meta.totalPages);
+        setLoading(false);
       })
-      .catch((error) => {
-        console.log("Error in fetching users:", error);
-        setError(error);
+      .catch((err) => {
+        console.error("Server Error in fetching users: ", err);
+        setError("Server Error in fetching users.");
         setLoading(false);
       });
   };
 
-  //TODO: Try-catch lagao
-  const getSearchUser = async (query) => {
-    setLoading(true);
-
-    const response = await fetch(
-      `${BASE_URL}/v1/users/search?query=${query}&page=${currentPageNumber}`
-    );
-
-    if (!response.ok) {
-      setLoading(false);
-      console.log("🚀 Search User Response not OK: ", response.status);
-      // setError(data.error);
-      // return <Error message={data.error} />;
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log("Search User Result: ", result);
-
-    if (result.data.length === 0) {
-      console.log("No user found with given search query!");
-      setUsers(result.data);
-      setTotalPages(0);
-      setLoading(false);
-      //Empty Users at current page
-      if (currentPageNumber !== 1) {
-        setCurrentPageNumber(currentPageNumber - 1);
-      }
-      return;
-    }
-
-    setUsers(result.data);
-    setTotalPages(result.meta.totalPages);
-    setLoading(false);
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      const response = await fetch(`${BASE_URL}/v1/users/${id}`, {
-        method: "DELETE",
-      });
-      if (response.ok) {
-        setIsModalOpen(true);
-        setInterval(() => {
-          setIsModalOpen(false);
-        }, 2000);
-        if (!searchInput) getAllUsers(currentPageNumber);
-        else getSearchUser(searchInput);
-      } else {
-        console.error(`Failed to delete user with ID ${id}`);
-        return <Error message={"Oops... Failed to delete!"} />; // TODO : change image for failure
-      }
-    } catch (error) {
-      console.error(`Error: ${error}`);
-      return <Error message={error} />;
-    }
-  };
-
-  if (error) return <Error message={error.message} />;
+  if (error) return <Error message={error} />;
   if (!users) return <Error message={"Something Went Wrong!!"} />;
-  
+
   return (
     <div className="main-page">
       <h1>Our Team</h1>
@@ -133,20 +95,28 @@ const MainPage = () => {
           <Loader />
         ) : (
           <>
-            <SearchBar
-              getSearchUser={getSearchUser}
-              searchInput={searchInput}
-              setSearchInput={setSearchInput}
-            />
             <SuccessModal
               isOpen={isModalOpen}
               message={"User deleted successfully"}
             />
             {!isloading && users.length === 0 ? (
-              <UserNotFound />
+              <>
+                <SearchBar
+                  getSearchUser={getUsers}
+                  searchInput={searchInput}
+                  setSearchInput={setSearchInput}
+                />
+                <UserNotFound />
+              </>
             ) : (
               <>
-                <UserList users={users} handleDelete={handleDelete} />
+                <UserList
+                  users={users}
+                  setIsModalOpen={setIsModalOpen}
+                  getSearchUser={getUsers}
+                  setSearchInput={setSearchInput}
+                  searchInput={searchInput}
+                />
                 <Pagination
                   totalPages={totalPages}
                   handlePagination={handlePagination}
