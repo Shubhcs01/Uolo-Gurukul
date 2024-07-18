@@ -1,0 +1,151 @@
+.loginContainer {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+  height: 100vh;
+  justify-items: center;
+  align-items: center;
+  padding: 20px;
+}
+
+#unityImage {
+  width: 80%;
+}
+
+.loginDetails {
+  width: 100%;
+  max-width: 28.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 30px;
+  padding: 20px;
+  position: relative;
+}
+
+.loginDetails_Main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.loginDetails_Main > h1 {
+  font-family: "Outfit";
+  font-optical-sizing: auto;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 60.48px;
+  letter-spacing: 0.25px;
+  text-align: left;
+  color: #101828;
+  margin-bottom: 2%;
+}
+
+.loginDetails_Main p:first-of-type {
+  margin-top: 0;
+  color: #ababab;
+  text-align: left;
+}
+
+.loginDetails_Main > label {
+  margin-top: 6%;
+  margin-bottom: 2%;
+}
+
+.loginDetails_Main > input {
+  height: 48px;
+  width: 100%;
+  padding: 5px 14px 5px 14px;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid #d0d5dd;
+  box-sizing: border-box;
+  font-family: "Open Sans";
+  font-optical-sizing: auto;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  text-align: left;
+  color: #667085;
+}
+
+.loginDetails input {
+  outline-color: #5b35da;
+}
+
+hr {
+  position: absolute;
+  top: 19%;
+  width: 149px;
+  border: 1px solid #ababab;
+}
+
+.loginUoloLogo {
+  width: 100%;
+  max-width: 9.28rem;
+  height: 3.125rem;
+}
+
+#loginBtn {
+  height: 46px;
+  width: 100%;
+  border-radius: 8px;
+  font-family: "Open Sans";
+  font-optical-sizing: auto;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20.43px;
+  letter-spacing: 0.44999998807907104px;
+  outline: none;
+  border: none;
+  color: #ffffff;
+  background-color: #5b35da;
+  margin-top: 6%;
+  margin-bottom: 2%;
+}
+
+#loginBtn:hover {
+  cursor: pointer;
+  background-color: #4324a8;
+}
+
+.loginError {
+  color: red;
+  margin: 0;
+}
+
+.redirectLogin_btn {
+  color: #ffffff;
+  background-color: #2E58FF;
+  border-radius: 8px;
+  font-family: "Open Sans";
+  font-optical-sizing: auto;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20.43px;
+  letter-spacing: 0.44999998807907104px;
+  outline: none;
+  border: none;
+  padding: 5px 10px;
+}
+
+.redirectLogin_btn:hover {
+  cursor: pointer;
+  background-color: #4324a8;
+}
+
+/* Media Queries */
+
+@media (min-width: 768px) {
+  .loginContainer {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+  }
+}
+
+@media (max-device-width: 768px) {
+  #unityImage {
+    display: none;
+  }
+}

@@ -1,21 +1,18 @@
 const express = require("express");
 const multer = require("multer");
-
-const router = express.Router();
+const { validateBearerToken } = require("../middleware/validateAuthToken");
+const userRouter = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-
 const {
-  getAllusers,
+  getusers,
   addUser,
   deleteUser,
-  searchUser
 } = require("../controllers/usersController");
 
-router.get("/", getAllusers);
-router.post("/",upload.single("avatar"), addUser);
-router.get("/search", searchUser);
-router.delete("/:id", deleteUser);
+userRouter.get("/", validateBearerToken, getusers);
+userRouter.post("/", validateBearerToken, upload.single("avatar"), addUser);
+userRouter.delete("/:id", validateBearerToken, deleteUser);
 
-module.exports = router;
+module.exports = userRouter;
