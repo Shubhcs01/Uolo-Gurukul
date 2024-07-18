@@ -4,10 +4,12 @@ const { default: mongoose } = require("mongoose");
 const logger = require("../config/logger");
 const ObjectId = mongoose.Types.ObjectId;
 
-const getAllusers = async (req, res) => {
-  logger.info("🚀 getAllusers called");
+const getusers = async (req, res) => {
+  logger.info("🚀 Getting users controller called");
   const page = Number(req.query.page || 1);
   const limit = Number(req.query.limit || 8);
+  let query = (req.query.query || '*');
+  query = query.trim();
 
   if (isNaN(page) || isNaN(limit) || page <= 0 || limit <= 0) {
     return res.status(400).json({
@@ -16,8 +18,16 @@ const getAllusers = async (req, res) => {
     });
   }
 
+  if (!query) {
+    return res
+      .status(400)
+      .json({ error: "Invalid User query. User query not provided" });
+  }
+
   try {
-    const result = await UserService.getUserFromDB(page, limit);
+    // Get all users from elastic search db
+    const result = await ElasticService.searchUsers(process.env.ELASTIC_INDEX_NAME, query, page, limit);
+    logger.info(`🚀 Search Results: `, {result})
     res.status(result.status).json(result);
   } catch (error) {
     logger.error("500: Error in getting all users:", error);
@@ -74,7 +84,7 @@ const addUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   const userId = req.params.id;
-
+    
   if (!userId || userId === "") {
     return res
       .status(400)
@@ -99,40 +109,8 @@ const deleteUser = async (req, res) => {
   }
 };
 
-const searchUser = async (req, res) => {
-  logger.info("🚀 searchUser controller called!")
-  let query = (req.query.query || '*');
-  query = query.trim();
-  const page = Number(req.query.page || 1);
-  const limit = Number(req.query.limit || 8); 
-
-  if (!query) {
-    return res
-      .status(400)
-      .json({ error: "Invalid User query. User query not provided" });
-  }
-
-  if (isNaN(page) || isNaN(limit) || page <= 0 || limit <= 0) {
-    return res.status(400).json({
-      status: 400,
-      error: "Invalid page or limit parameter. Both must be positive numbers.",
-    });
-  }
-
-  try {
-    const result = await ElasticService.searchUsers(process.env.ELASTIC_INDEX_NAME, query, page, limit);
-    logger.info(`🚀 Search Results: `, {result})
-    res.status(result.status).json(result);
-  } catch (error) {
-    logger.error(`Error in searching`, error);
-    res.status(500).json({error: error});
-  }
-
-}
-
 module.exports = {
-  getAllusers,
+  getusers,
   addUser,
   deleteUser,
-  searchUser,
 };
