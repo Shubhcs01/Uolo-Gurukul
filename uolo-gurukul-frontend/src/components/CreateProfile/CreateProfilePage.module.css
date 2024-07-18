@@ -4,7 +4,7 @@
   justify-content: center;
   align-items: center;
   width: 85%;
-  /* height: 100vh; */
+  /* height: 95vh; */
   background-color: #f6f6f6;
   margin-left: 15%;
   margin-top: 3px;
@@ -13,7 +13,7 @@
 .createProfileContainer > h1 {
   font-family: "Outfit";
   font-optical-sizing: auto;
-  font-size: 32px;
+  font-size: 2em;
   font-weight: 700;
   line-height: 40.32px;
   letter-spacing: 0.25px;
@@ -69,7 +69,7 @@
   height: 100%;
 }
 
-input {
+.form input {
   width: 396px;
   height: 44px;
   padding: 5px 14px 5px 14px;
@@ -143,12 +143,12 @@ label {
   border: 1px solid #d0d5dd;
   background-color: #98a2b3;
   cursor: pointer;
-  color: #FFFFFF;
-} 
+  color: #ffffff;
+}
 
 .enabledBtn {
-  color: #FFFFFF;
-  background-color: #6A39EA;
+  color: #ffffff;
+  background-color: #6a39ea;
 }
 
 .formError {
@@ -174,22 +174,61 @@ label {
   cursor: pointer;
 }
 
+@media only screen and ((min-width: 1470px)) {
+  .createProfileContainer {
+    height: 95vh;
+  }
+}
+
 @media only screen and ((min-width: 800px)) and (max-device-width: 1025px) {
   .createProfileContainer {
-      margin-left: 25%;
-      
+    margin-left: 25%;
   }
 }
 
-@media only screen and ((max-device-width: 800px)){
+@media only screen and (max-device-width: 800px) {
   .createProfileContainer {
-      margin-left: 32%;
+    width: 100%;
+    margin: 0;
   }
 }
 
-@media only screen and ((max-device-width: 600px)){
+@media only screen and ((max-device-width: 600px)) {
   .createProfileContainer {
-      margin-left: 0;
+    margin-top: 66px;
+    background-color: white;
+    width: 100%;
+    align-items: flex-start;
+
+  }
+
+  .formFooter {
+    margin-bottom: 0;
+    width: 100%;
+  }
+
+  .createProfile {
+    border-radius: 0;
+    padding: 16px;
+    border: 0;
+    width: 100%;
+  }
+
+  .createProfileContainer > h1 {
+    margin-bottom: 0;
+    margin-left: calc(50% - 3em);
+  }
+
+  .uploadPhoto {
+    width: 100%;
+  }
+
+  .form input {
+    width: 100%;
+  }
+
+  .form{
+    width: 100%;
   }
 }
 
