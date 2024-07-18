@@ -1,20 +1,8 @@
 const express = require("express");
+const { checkServerHealth } = require("../controllers/healthController");
+
 const healthRouter = express.Router();
 
-healthRouter.get('/', async (_req, res, _next) => {
-
-    const healthcheck = {
-        uptime: process.uptime(),
-        responsetime: process.hrtime(),
-        message: 'OK',
-        timestamp: Date.now()
-    };
-    try {
-        res.send(healthcheck);
-    } catch (error) {
-        healthcheck.message = error;
-        res.status(503).send();
-    }
-});
+healthRouter.get("/", checkServerHealth);
 
 module.exports = healthRouter;
