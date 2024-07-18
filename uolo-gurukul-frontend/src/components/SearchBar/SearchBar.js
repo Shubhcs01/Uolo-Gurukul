@@ -3,6 +3,7 @@ import SearchIcon from "../../assets/searchIcon.png";
 import { MdClear } from "react-icons/md";
 
 const SearchBar = ({ getSearchUser, searchInput, setSearchInput }) => {
+  
   const handleClick = () => {
     getSearchUser(searchInput);
   };

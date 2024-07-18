@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import SuccessModal from "../Modal/SuccessModal";
 import DefaultImage from "../../assets/profilePic.png";
 import UploadImg from "../../assets/upload.png";
-import CryptoJS from 'crypto-js';
+import CryptoJS from "crypto-js";
 
 const CreateProfilePage = () => {
   const [name, setName] = useState("");
@@ -21,7 +21,7 @@ const CreateProfilePage = () => {
   const navigate = useNavigate();
 
   const BASE_URL = process.env.REACT_APP_API_BASE_URL;
-  const secretKey = "Uolo123@";
+  const SECRET_KEY = process.env.REACT_APP_SECRET_KEY;
 
   useEffect(() => {
     if (name && password && confirmPassword && email && file) {
@@ -40,6 +40,56 @@ const CreateProfilePage = () => {
     setBorderradius("0%");
     setIsButtonEnabled(false);
     setFile(null);
+  };
+
+  const handleEmailInput = (e) => {
+    const email = e.target.value;
+    setEmail(email);
+    validateEmail2(email);
+  };
+
+  const validateEmail2 = (email) => {
+    setErrorMessage([]);
+
+    // No `@` symbol
+    if (!email.includes("@")) {
+      setErrorMessage(['Missing "@" symbol']);
+      return;
+    }
+
+    // More than one `@` symbol
+    if ((email.match(/@/g) || []).length > 1) {
+      setErrorMessage(['Multiple "@" symbols']);
+      return;
+    }
+
+    // Leading or trailing spaces
+    if (email.trim() !== email) {
+      setErrorMessage(["Leading or trailing spaces not allowed!"]);
+      return;
+    }
+
+    // Spaces in local part or domain
+    if (/\s/.test(email)) {
+      setErrorMessage(["Spaces are not allowed in email"]);
+      return;
+    }
+
+    const [localPart, domain] = email.split("@");
+
+    // Valid local part
+    if (!localPart || !/^[^\s@]+$/.test(localPart)) {
+      setErrorMessage(["Invalid local part"]);
+      return;
+    }
+
+    // Valid domain
+    if (!domain || !/^[^\s@]+\.[^\s@]+$/.test(domain)) {
+      setErrorMessage(["Invalid domain"]);
+      return;
+    }
+
+    setErrorMessage([]);
   };
 
   const validatePassword = (password) => {
@@ -131,13 +181,15 @@ const CreateProfilePage = () => {
     console.log("POST API called");
     setErrorMessage([]);
 
-    const hashedPassword = CryptoJS.AES.encrypt(password, secretKey).toString();;
-
+    const encryptedPassword = CryptoJS.AES.encrypt(
+      password,
+      SECRET_KEY
+    ).toString();
 
     const formData = new FormData();
     formData.append("name", name);
     formData.append("email", email);
-    formData.append("password", hashedPassword);
+    formData.append("password", encryptedPassword);
 
     if (file) {
       formData.append("avatar", file);
@@ -147,6 +199,7 @@ const CreateProfilePage = () => {
       const response = await fetch(`${BASE_URL}/v1/users`, {
         method: "POST",
         body: formData,
+        credentials: 'include', // Include credentials (cookies)
       });
 
       const data = await response.json();
@@ -272,7 +325,7 @@ const CreateProfilePage = () => {
           <input
             value={email}
             placeholder="Enter your email"
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleEmailInput}
             required
           />
           <label>
@@ -322,5 +375,3 @@ const CreateProfilePage = () => {
 };
 
 export default CreateProfilePage;
-
-
