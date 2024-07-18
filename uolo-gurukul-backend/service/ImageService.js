@@ -1,4 +1,5 @@
 require("dotenv").config();
+const sharp = require('sharp');
 const logger = require("../config/logger");
 const {
   S3Client,
@@ -46,10 +47,19 @@ const postObject = async (filename, contentType, buffer) => {
   const key = `shubham/uploads/team-uploads/${imageName}`;
 
   try {
+
+    const processedImageBuffer = await sharp(buffer)
+    .resize(400, 400, {
+      fit: sharp.fit.inside,
+      withoutEnlargement: true,
+    })
+    .webp()
+    .toBuffer();
+
     const command = new PutObjectCommand({
       Bucket: process.env.BUCKET_NAME,
       Key: key,
-      Body: buffer,
+      Body: processedImageBuffer,
       contentType: contentType,
     });
     const data = await s3Client.send(command);
